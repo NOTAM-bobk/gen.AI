@@ -1,1 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex AI</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons for UI elements -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Marked.js for parsing Markdown from the AI response -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Highlight.js for code block syntax highlighting (Dark theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
+    <!-- Tesseract.js for Image-to-Text OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <style>
+        /* Mobile Overscroll Fix */
+        body { overscroll-behavior-y: none; }
+        
+        /* Custom scrollbar for the dark theme */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(16, 185, 129, 0.5); border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(16, 185, 129, 0.8); }
+        
+        /* Google Style Color Palette for Name */
+        .google-name {
+            background: linear-gradient(90deg, #4285F4 0%, #DB4437 33%, #F4B400 66%, #0F9D58 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+
+        /* Ambient Background Orbs */
+        @keyframes move-orb1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(3vw, 8vh) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes move-orb2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-3vw, -8vh) scale(1.08); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .orb-1 { animation: move-orb1 18s ease-in-out infinite; }
+        .orb-2 { animation: move-orb2 22s ease-in-out infinite; }
+
+        /* Vortex Edge Lighting (Emerald/Teal) */
+        @keyframes rainbow-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .vortex-border-wrap {
+            background: linear-gradient(90deg, #10b981, #06b6d4, #3b82f6, #10b981);
+            background-size: 200% 200%;
+            animation: rainbow-border 4s linear infinite;
+            padding: 2px;
+            border-radius: 1.5rem;
+            transition: all 0.4s ease;
+        }
+        
+        /* Static Border during chat */
+        .border-static {
+            animation: none !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Liquid Glass Elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-panel-strong {
+            background: rgba(18, 18, 26, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Highly Blurred Liquid Glass for Chat Title & Top Nav */
+        .liquid-glass-title {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Neo-Brutalist + Glassmorphism Styles (Emerald Theme) */
+        .neo-glass {
+            background: rgba(18, 18, 26, 0.85);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 8px 8px 0px rgba(16, 185, 129, 0.2);
+        }
+        
+        .neo-glass-btn {
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            box-shadow: 4px 4px 0px rgba(16, 185, 129, 0.5);
+            transition: all 0.2s cubic-bezier(0.2, 1.3, 0.7, 1);
+        }
+        .neo-glass-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px rgba(16, 185, 129, 0.7);
+            background: rgba(16, 185, 129, 0.25);
+        }
+        .neo-glass-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px rgba(16, 185, 129, 1);
+        }
+        
+        .neo-glass-btn-red {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            box-shadow: 4px 4px 0px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s ease;
+        }
+        .neo-glass-btn-red:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Custom Audio Player Styling */
+        audio { height: 36px; border-radius: 8px; outline: none; }
+        audio::-webkit-media-controls-panel { background: rgba(16, 185, 129, 0.1); }
+        audio::-webkit-media-controls-play-button { background-color: rgba(16,185,129,0.8); border-radius: 50%; }
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display { color: #fff; }
+
+        /* Flying Text Animation */
+        @keyframes fly-in-text {
+            0% { opacity: 0; transform: translateY(15px) scale(0.98) rotateX(-10deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0deg); }
+        }
+        .streaming.markdown-body * {
+            animation: fly-in-text 0.5s cubic-bezier(0.2, 1.3, 0.7, 1) forwards;
+        }
+
+        /* Liquid Glass Input Backdrop */
+        .liquid-backdrop {
+            position: absolute;
+            inset: -40px 0 0 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            mask-image: linear-gradient(to bottom, transparent, black 40px);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 40px);
+            z-index: -1;
+        }
+
+        /* Bouncing Animation */
+        .bounce-dot { animation: custom-bounce 1.4s infinite ease-in-out both; }
+        .bounce-dot:nth-child(1) { animation-delay: -0.32s; }
+        .bounce-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes custom-bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Animations */
+        .fade-out {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .message-enter { animation: slideUpFade 0.4s ease-out forwards; }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Block Cube Form Styles (Login Screen) */
+        .form { width: 100%; max-width: 320px; margin: 0 auto; }
+        .form .control { margin: 0 0 24px; position: relative; }
+        .form .control input, .form .control .block-cube__btn {
+            width: 100%; padding: 14px 16px; border: 0; background: transparent;
+            color: #fff; font-size: 16px; position: relative; z-index: 2;
+        }
+        .form .control input:focus, .form .control .block-cube__btn:focus { outline: none; }
+        .form .control .block-cube__btn { cursor: pointer; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .form .control .bg-top {
+            position: absolute; height: 10px; background: linear-gradient(90deg, #059669 0%, #14b8a6 100%);
+            bottom: 100%; left: 5px; right: -5px; transform: skew(-45deg, 0); margin: 0; z-index: 1;
+        }
+        .form .control .bg-top .bg-inner { bottom: 0; }
+        .form .control .bg {
+            position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, #059669 0%, #14b8a6 100%); z-index: 1;
+        }
+        .form .control .bg-right {
+            position: absolute; background: #14b8a6; top: -5px; z-index: 0; bottom: 5px;
+            width: 10px; left: 100%; transform: skew(0, -45deg);
+        }
+        .form .control .bg-right .bg-inner { left: 0; }
+        .form .control .bg .bg-inner { transition: all 0.2s ease-in-out; }
+        .form .control .bg-inner { background: #12121a; position: absolute; left: 2px; top: 2px; right: 2px; bottom: 2px; }
+        .form .control.block-cube-hover:hover .bg .bg-inner { background: rgba(16, 185, 129, 0.2); }
+        .form .control.block-input input::placeholder { color: rgba(255,255,255,0.4); }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            appearance: none; background-color: transparent; margin: 0;
+            font: inherit; color: currentColor; width: 1.15em; height: 1.15em;
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 0.15em;
+            display: grid; place-content: center; cursor: pointer;
+        }
+        .custom-checkbox::before {
+            content: ""; width: 0.65em; height: 0.65em;
+            transform: scale(0); transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #10b981;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .custom-checkbox:checked::before { transform: scale(1); }
+
+        /* --- Colourful Popup Hamburger Menu --- */
+        .circular-menu {
+            position: fixed; top: 20px; left: 20px; z-index: 40;
+            width: 56px; height: 56px; list-style: none; pointer-events: auto;
+        }
+        .circular-menu-item, .circular-menu-button {
+            display: grid; place-items: center; width: 56px; height: 56px;
+            border-radius: 50%; color: white; transition: transform 0.5s cubic-bezier(0.2, 1.3, 0.7, 1);
+            position: absolute; top: 0; left: 0;
+        }
+        
+        /* Animated Nav Button Gradient */
+        @keyframes nav-gradient-anim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .circular-menu-button {
+            background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6, #8b5cf6, #10b981);
+            background-size: 300% 300%;
+            animation: nav-gradient-anim 6s ease infinite;
+            cursor: pointer; transition: all 0.4s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); z-index: 10;
+        }
+        .circular-menu-button:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .glass-gray-nav {
+            animation: none !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .hamburger-lines { position: absolute; width: 22px; height: 3px; background: white; border-radius: 2px; transition: transform 0.3s, opacity 0.2s; }
+        .line-1 { transform: translateY(-7px); }
+        .line-3 { transform: translateY(7px); }
+        .menu-open { display: none; }
+        
+        .menu-open:checked ~ .circular-menu-button .line-1 { transform: rotate(45deg); }
+        .menu-open:checked ~ .circular-menu-button .line-2 { opacity: 0; }
+        .menu-open:checked ~ .circular-menu-button .line-3 { transform: rotate(-45deg); }
+        
+        .circular-menu-item {
+            opacity: 0; transform: scale(0);
+            transition: transform 0.4s cubic-bezier(0.2, 1.3, 0.7, 1), opacity 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .menu-open:checked ~ .circular-menu-item { opacity: 1; transform: scale(1); }
+        .menu-open:checked ~ .circular-menu-item:nth-child(3) { transition-delay: 0.05s; transform: translate(75px, 0); }
+        .menu-open:checked ~ .circular-menu-item:nth-child(4) { transition-delay: 0.1s; transform: translate(55px, 55px); }
+        .menu-open:checked ~ .circular-menu-item:nth-child(5) { transition-delay: 0.15s; transform: translate(0, 75px); }
+        .circular-menu-item:hover { transform: scale(1.1) !important; }
+        
+        /* Jiggle Bounce Animation */
+        @keyframes jiggle-bounce {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            25% { transform: translateY(-3px) scale(1.05) rotate(5deg); }
+            50% { transform: translateY(2px) scale(0.98) rotate(-4deg); }
+            75% { transform: translateY(-2px) scale(1.02) rotate(2deg); }
+        }
+        .menu-open:checked ~ .circular-menu-item .jiggle-inner { animation: jiggle-bounce 2.5s infinite ease-in-out; }
+        .menu-open:checked ~ .circular-menu-item:nth-child(3) .jiggle-inner { animation-delay: 0s; }
+        .menu-open:checked ~ .circular-menu-item:nth-child(4) .jiggle-inner { animation-delay: 0.2s; }
+        .menu-open:checked ~ .circular-menu-item:nth-child(5) .jiggle-inner { animation-delay: 0.4s; }
+
+        .item-home { background: linear-gradient(135deg, #3b82f6, #2dd4bf); }
+        .item-history { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+        .item-settings { background: linear-gradient(135deg, #10b981, #06b6d4); }
+
+        /* Custom Settings Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #10b981; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(16,185,129,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+
+        /* Dark Theme Markdown Styles - Upgraded for Canvas/Spreadsheets */
+        .markdown-body { color: #e2e8f0; }
+        .markdown-body p { margin-bottom: 0.75rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body code { background-color: rgba(255,255,255,0.1); padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875em; color: #e2e8f0; }
+        .markdown-body pre { background-color: #1e1e1e; color: #fff; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.05); }
+        .markdown-body pre code { background-color: transparent; padding: 0; color: inherit; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body a { color: #06b6d4; text-decoration: underline; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: #fff; }
+        .markdown-body h1 { font-size: 1.5em; }
+        .markdown-body h2 { font-size: 1.25em; }
+        /* Markdown Tables / Canvases */
+        .markdown-body table { width: 100%; overflow-x: auto; display: block; border-collapse: collapse; margin-bottom: 1rem; border-radius: 0.5rem; }
+        .markdown-body th, .markdown-body td { border: 1px solid rgba(16,185,129,0.2); padding: 8px 12px; }
+        .markdown-body th { background-color: rgba(16,185,129,0.1); font-weight: bold; }
+        .markdown-body tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+    </style>
+</head>
+<body class="bg-black bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-[#064e3b]/80 via-[#0a0a0a] to-[#0a0a0a] h-screen flex flex-col font-sans text-white overflow-hidden relative">
+
+    <!-- Ambient Subtle Orbs Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-[0]">
+        <div class="absolute top-[10%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-emerald-900/10 blur-[100px] orb-1"></div>
+        <div class="absolute bottom-[20%] right-[10%] w-[30vw] h-[30vw] rounded-full bg-cyan-900/10 blur-[120px] orb-2"></div>
+    </div>
+
+    <!-- Auth Screen (Login/Register) -->
+    <div id="authScreen" class="fixed inset-0 z-50 bg-[#0a0a0a] flex flex-col items-center justify-center transition-opacity duration-700">
+        <form class="form" id="authForm" autocomplete="off">
+            <div class="control">
+                <h1 id="authTitle" class="text-3xl font-bold mb-8 tracking-widest text-center text-white uppercase">Sign In</h1>
+            </div>
+            
+            <div id="authError" class="hidden mb-6 p-3 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400 text-sm text-center"></div>
+            <div id="authSuccess" class="hidden mb-6 p-3 rounded-xl bg-green-500/20 border border-green-500/50 text-green-400 text-sm text-center"></div>
+
+            <div class="control block-cube block-input">
+                <input name="username" id="authUsername" type="text" placeholder="Username" required autocomplete="off" />
+                <div class="bg-top"><div class="bg-inner"></div></div>
+                <div class="bg-right"><div class="bg-inner"></div></div>
+                <div class="bg"><div class="bg-inner"></div></div>
+            </div>
+
+            <div class="control block-cube block-input">
+                <input name="password" id="authPassword" type="password" placeholder="Password" required />
+                <div class="bg-top"><div class="bg-inner"></div></div>
+                <div class="bg-right"><div class="bg-inner"></div></div>
+                <div class="bg"><div class="bg-inner"></div></div>
+            </div>
+
+            <div class="flex items-center gap-3 mb-8 mt-2 justify-center">
+                <input type="checkbox" id="authRemember" checked class="custom-checkbox">
+                <label for="authRemember" class="text-sm text-gray-400 cursor-pointer select-none tracking-wide">Remember Me</label>
+            </div>
+
+            <div class="control block-cube block-cube-hover">
+                <button class="block-cube__btn submit" type="submit" id="authSubmitBtn">Sign In</button>
+                <div class="bg-top"><div class="bg-inner"></div></div>
+                <div class="bg-right"><div class="bg-inner"></div></div>
+                <div class="bg"><div class="bg-inner"></div></div>
+            </div>
+
+            <div class="control block-cube block-cube-hover mt-6">
+                <button class="block-cube__btn register text-sm !text-gray-400 hover:!text-white transition-colors" type="button" id="authToggleBtn" onclick="toggleAuthMode()">Register</button>
+                <div class="bg-top"><div class="bg-inner"></div></div>
+                <div class="bg-right"><div class="bg-inner"></div></div>
+                <div class="bg"><div class="bg-inner"></div></div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Main App Interface -->
+    <div id="mainApp" class="absolute inset-0 flex flex-col opacity-0 transition-opacity duration-1000 ease-in-out pointer-events-none">
+        
+        <!-- App Mode Switcher (Visible only on Home Screen) -->
+        <div id="modeSwitcher" class="absolute top-6 left-1/2 transform -translate-x-1/2 z-40 liquid-glass-title rounded-full flex p-1 transition-opacity duration-500 pointer-events-auto">
+            <button onclick="setAppMode('text')" id="modeTextBtn" class="px-5 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 text-emerald-400">Text</button>
+            <button onclick="setAppMode('vision')" id="modeVisionBtn" class="px-5 py-1.5 rounded-full text-sm font-bold transition-all text-gray-400 hover:text-white">Vision</button>
+        </div>
+
+        <!-- Chat Title Header (Visible only during chat) -->
+        <div id="chatTitleHeader" class="absolute top-6 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none opacity-0 transition-opacity duration-500 flex justify-center w-full">
+            <div class="flex items-center gap-2 max-w-[80%] drop-shadow-md bg-black/30 px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/5">
+                <i class="ph ph-chat-circle text-emerald-400"></i>
+                <span id="chatTitleDisplay" class="text-white text-sm sm:text-base font-bold tracking-wide truncate">New Chat</span>
+            </div>
+        </div>
+
+        <!-- Colourful Popup Hamburger Menu -->
+        <nav class="circular-menu transition-opacity duration-500" id="mainCircularNav">
+            <input type="checkbox" class="menu-open" name="menu-open" id="menu-open" />
+            <label class="circular-menu-button" id="navMenuBtn" for="menu-open">
+                <span class="hamburger-lines line-1"></span>
+                <span class="hamburger-lines line-2"></span>
+                <span class="hamburger-lines line-3"></span>
+            </label>
+            <!-- Menu Items -->
+            <button type="button" onclick="startNewChat()" class="circular-menu-item item-home" title="New Chat">
+                <div class="jiggle-inner"><i class="ph ph-house text-2xl"></i></div>
+            </button>
+            <button type="button" onclick="openHistory()" class="circular-menu-item item-history" title="Chat History">
+                <div class="jiggle-inner"><i class="ph ph-clock-counter-clockwise text-2xl"></i></div>
+            </button>
+            <button type="button" onclick="openSettings()" class="circular-menu-item item-settings" title="Settings">
+                <div class="jiggle-inner"><i class="ph ph-gear text-2xl"></i></div>
+            </button>
+        </nav>
+
+        <!-- Ghost Mode / Temp Chat Button -->
+        <div id="ghostIconContainer" class="fixed top-5 right-5 z-40 pointer-events-auto transition-opacity duration-500">
+            <button id="tempChatBtn" onclick="startTemporaryChat()" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shadow-md" title="Temporary Chat (Ghost Mode)">
+                <i class="ph ph-ghost text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Animated Greeting Area with Suggestions -->
+        <div id="greetingArea" class="absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out p-6 text-center z-10 w-full overflow-hidden mt-10">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight leading-tight pointer-events-auto">
+                <span id="timeGreeting" class="text-white cursor-pointer hover:text-emerald-300 transition-colors" onclick="changeGreeting()" title="Click for a new greeting!">Hello,</span><br/>
+                <span id="userNameDisplay" class="google-name"></span>
+            </h1>
+            <p id="welcomeSubtitle" class="text-gray-400 text-lg mb-8 h-7 font-mono text-sm"></p>
+
+            <!-- Suggestions UI -->
+            <div class="flex flex-col items-center gap-4 w-full max-w-2xl pointer-events-auto" id="suggestionsBlock">
+                <button id="suggestionsBtn" class="px-6 py-2.5 rounded-full neo-glass text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center gap-2 border border-emerald-500/30 font-bold tracking-wide">
+                    <i class="ph ph-lightbulb text-lg"></i> Try a Suggestion
+                </button>
+                <!-- Horizontally Scrollable Carousel for suggestions -->
+                <div id="suggestionsPanel" class="w-full hidden flex-row overflow-x-auto snap-x gap-3 transition-all duration-300 opacity-0 transform translate-y-2 pb-3 custom-scrollbar">
+                    <!-- Suggestions will be injected here via JS to support Ghost vs Normal mode -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <main id="chatContainer" class="flex-1 overflow-y-auto w-full max-w-4xl mx-auto custom-scrollbar flex flex-col gap-6 pt-24 pb-40 px-4 sm:px-6 relative z-10 pointer-events-auto hidden">
+            <!-- Dynamic Messages Go Here -->
+        </main>
+
+        <!-- Scroll to Bottom Button -->
+        <button id="scrollToBottomBtn" class="fixed bottom-[130px] right-6 z-40 w-10 h-10 flex items-center justify-center text-white rounded-full neo-glass-btn opacity-0 pointer-events-none translate-y-4 transition-all duration-300">
+            <i class="ph ph-arrow-down font-bold text-lg"></i>
+        </button>
+
+        <!-- Fixed Input Area at the Bottom -->
+        <div class="fixed bottom-0 left-0 w-full p-4 sm:p-6 z-30 pointer-events-none">
+            <!-- Liquid Glass Background Element -->
+            <div class="liquid-backdrop"></div>
+            
+            <div class="max-w-4xl mx-auto glass-panel-strong rounded-[2rem] p-1 pointer-events-auto shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                <div class="vortex-border-wrap w-full relative" id="inputBorderWrap">
+                    
+                    <form id="chatForm" class="flex flex-col relative bg-[#0a0a0a]/80 backdrop-blur-3xl rounded-[1.7rem] pt-2 px-2 pb-1.5 transition-all focus-within:bg-[#12121a]">
+                        
+                        <!-- Attachments Tray (Hidden Text rendering) -->
+                        <div id="attachmentTray" class="flex flex-wrap gap-2 px-2 pt-1 pb-1 empty:hidden"></div>
+
+                        <!-- Slash Commands Drop-Up Menu -->
+                        <div id="slashCommandMenu" class="absolute bottom-[105%] left-0 w-full mb-2 bg-[#0a0a0a]/90 backdrop-blur-xl border-2 border-emerald-500/30 rounded-xl overflow-hidden hidden flex-col shadow-lg z-50 transition-all max-h-64 overflow-y-auto custom-scrollbar">
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/itunes ">
+                                <i class="ph ph-music-notes text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/itunes</div><div class="text-xs text-gray-400">Search and play a song preview</div></div>
+                            </button>
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/weather ">
+                                <i class="ph ph-cloud-sun text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/weather</div><div class="text-xs text-gray-400">Check current weather in a city</div></div>
+                            </button>
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/ip ">
+                                <i class="ph ph-globe text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/ip</div><div class="text-xs text-gray-400">Find your IP and location info</div></div>
+                            </button>
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/genjutsu ">
+                                <i class="ph ph-monitor-play text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/genjutsu</div><div class="text-xs text-gray-400">Lookup anime info & latest eps</div></div>
+                            </button>
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/sendemail ">
+                                <i class="ph ph-envelope-simple text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/sendemail</div><div class="text-xs text-gray-400">Send an email based on prompt</div></div>
+                            </button>
+                            <button type="button" class="slash-option px-4 py-3 text-left text-sm text-white hover:bg-emerald-500/20 flex items-center gap-3 transition-colors border-b border-white/5" data-cmd="/upload ">
+                                <i class="ph ph-cloud-arrow-up text-emerald-400 text-xl"></i>
+                                <div><div class="font-bold tracking-wide">/upload</div><div class="text-xs text-gray-400">Upload file to Gofile.io & get URL</div></div>
+                            </button>
+                        </div>
+
+                        <!-- Input Text Area -->
+                        <textarea id="messageInput" rows="1" 
+                            class="w-full resize-none bg-transparent px-3 py-2 text-white focus:outline-none custom-scrollbar text-base min-h-[50px]"
+                            placeholder="Message Vortex..."
+                            oninput="autoResize(this)"
+                            onkeydown="handleEnter(event)"></textarea>
+                        
+                        <!-- Tools Row (Bottom) -->
+                        <div class="flex items-center justify-between mt-1 px-1">
+                            
+                            <!-- Left Side: Attach & Model Selector -->
+                            <div class="flex items-center gap-2">
+                                <!-- Attach Button -->
+                                <button type="button" id="attachBtn" class="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors" title="Attach image or text file">
+                                    <i class="ph ph-paperclip text-xl"></i>
+                                </button>
+                                <input type="file" id="fileUpload" class="hidden" accept="image/*,.txt,.md,.csv,.js,.html,.css" />
+
+                                <!-- Compact Model Selector -->
+                                <div class="relative flex items-center" id="modelSelectorContainer">
+                                    <select id="inlineModelSelect" class="appearance-none bg-transparent hover:bg-white/5 border border-white/10 rounded-full pl-3 pr-7 py-1.5 text-xs font-bold tracking-wide text-emerald-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-colors w-[85px] sm:w-[95px]">
+                                        <option value="fast" selected class="bg-[#12121a]">⚡ Fast</option>
+                                        <option value="thinking" class="bg-[#12121a]">🧠 Think</option>
+                                        <option value="deep" class="bg-[#12121a]">🔍 Deep</option>
+                                    </select>
+                                    <i class="ph ph-caret-down absolute right-2 text-emerald-500/70 pointer-events-none text-xs"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Side: Send/Voice Button -->
+                            <button type="submit" id="sendBtn" class="p-2.5 text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center h-10 w-10 shrink-0 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-full relative group">
+                                <i id="inputActionIcon" class="ph ph-microphone text-lg font-bold transition-all"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Slide-up Menu -->
+    <div id="historyModal" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden flex-col justify-end opacity-0 transition-opacity duration-300">
+        <div id="historyContent" class="w-full max-w-2xl mx-auto flex flex-col neo-glass rounded-t-3xl transition-transform duration-300 translate-y-full" style="max-height: 85vh;">
+            <div class="swipe-area w-full pt-3 pb-2 flex justify-center cursor-grab touch-none">
+                <div class="w-12 h-1.5 bg-white/20 rounded-full"></div>
+            </div>
+            <div class="flex justify-between items-center mb-4 mt-2 border-b border-emerald-500/20 pb-4 px-6 sm:px-8">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-3">Chat History</h3>
+                <button onclick="closeHistory()" class="text-emerald-300 hover:text-white transition-colors"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <div id="historyList" class="flex-1 overflow-y-auto px-6 sm:px-8 custom-scrollbar space-y-3 mb-4">
+                <!-- Dynamic session items will be injected here -->
+            </div>
+            <div class="pt-4 border-t border-emerald-500/20 pb-6 px-6 sm:px-8 shrink-0">
+                <button onclick="startNewChat()" class="w-full py-3.5 px-4 text-white rounded-xl flex items-center justify-center gap-2 font-bold text-sm neo-glass-btn">
+                    <i class="ph ph-plus text-lg"></i> Start New Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Slide-up Menu (Accordions) -->
+    <div id="settingsModal" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden flex-col justify-end opacity-0 transition-opacity duration-300">
+        <div id="settingsContent" class="w-full max-w-2xl mx-auto flex flex-col neo-glass rounded-t-3xl transition-transform duration-300 translate-y-full" style="max-height: 85vh;">
+            <div class="swipe-area w-full pt-3 pb-2 flex justify-center cursor-grab touch-none">
+                <div class="w-12 h-1.5 bg-white/20 rounded-full"></div>
+            </div>
+            <div class="flex justify-between items-center mb-6 mt-2 px-6 sm:px-10 border-b border-emerald-500/20 pb-4">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-3"><i class="ph ph-gear-six text-emerald-400"></i> Settings</h3>
+                <button onclick="closeSettings()" class="text-emerald-300 hover:text-white transition-colors"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+
+            <!-- Scrollable Settings -->
+            <div class="overflow-y-auto px-6 sm:px-10 pb-4 flex-1 custom-scrollbar space-y-4">
+                
+                <!-- Group 1: User & Data -->
+                <details class="group bg-black/40 border border-emerald-500/20 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                    <summary class="flex justify-between items-center p-5 cursor-pointer font-bold text-xs uppercase tracking-wider text-emerald-400 outline-none">
+                        <div class="flex items-center gap-2"><i class="ph ph-user text-lg"></i> User & Data</div>
+                        <i class="ph ph-caret-down transition-transform duration-300 group-open:-rotate-180 text-lg"></i>
+                    </summary>
+                    <div class="p-5 pt-0 space-y-5 border-t border-emerald-500/10 mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider">Preferred Name</label>
+                            <input type="text" id="set-username" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider">About Me (AI reads this)</label>
+                            <textarea id="set-aboutme" rows="3" class="w-full resize-none bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm custom-scrollbar" placeholder="I like coding, my favorite color is blue..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider flex justify-between">Reminders & Notes <button onclick="clearReminders()" class="text-red-400 hover:text-red-300 normal-case tracking-normal font-normal">Clear</button></label>
+                            <textarea id="set-reminders" rows="3" class="w-full resize-none bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm custom-scrollbar" placeholder="Tasks the AI is keeping track of..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider flex justify-between">Email History <button onclick="clearEmailHistory()" class="text-red-400 hover:text-red-300 normal-case tracking-normal font-normal">Clear</button></label>
+                            <textarea id="set-emailhistory" rows="3" readonly class="w-full resize-none bg-[#0a0a0a]/40 border border-emerald-500/10 rounded-xl px-4 py-2.5 text-gray-400 focus:outline-none transition-all text-xs font-mono custom-scrollbar" placeholder="No emails sent yet."></textarea>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Group 2: API & Integrations -->
+                <details class="group bg-black/40 border border-emerald-500/20 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                    <summary class="flex justify-between items-center p-5 cursor-pointer font-bold text-xs uppercase tracking-wider text-emerald-400 outline-none">
+                        <div class="flex items-center gap-2"><i class="ph ph-plug text-lg"></i> API & Integrations</div>
+                        <i class="ph ph-caret-down transition-transform duration-300 group-open:-rotate-180 text-lg"></i>
+                    </summary>
+                    <div class="p-5 pt-0 space-y-5 border-t border-emerald-500/10 mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider">Groq API Key</label>
+                            <input type="password" id="set-key" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm font-mono" placeholder="gsk_...">
+                        </div>
+                        <!-- EmailJS Settings -->
+                        <div class="pt-2">
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-2 uppercase tracking-wider border-b border-emerald-500/20 pb-1">EmailJS Setup (for /sendemail)</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                                <input type="text" id="set-email-service" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-all text-xs font-mono" placeholder="Service ID (e.g. service_xyz)">
+                                <input type="text" id="set-email-template" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-all text-xs font-mono" placeholder="Template ID (e.g. template_xyz)">
+                                <input type="text" id="set-email-public" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-all text-xs font-mono sm:col-span-2" placeholder="Public Key (e.g. yOuR_pUbLiC_kEy)">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Group 3: AI Model Config -->
+                <details class="group bg-black/40 border border-emerald-500/20 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                    <summary class="flex justify-between items-center p-5 cursor-pointer font-bold text-xs uppercase tracking-wider text-emerald-400 outline-none">
+                        <div class="flex items-center gap-2"><i class="ph ph-cpu text-lg"></i> AI Configuration</div>
+                        <i class="ph ph-caret-down transition-transform duration-300 group-open:-rotate-180 text-lg"></i>
+                    </summary>
+                    <div class="p-5 pt-0 space-y-5 border-t border-emerald-500/10 mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-200/70 mb-1 uppercase tracking-wider">Default AI Model</label>
+                            <select id="set-model" class="w-full bg-[#0a0a0a]/80 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm appearance-none">
+                                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Fast)</option>
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Thinking)</option>
+                                <option value="groq/compound">Groq Compound (Deep)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-emerald-200/70 uppercase tracking-wider">Max Tokens</label>
+                                <span id="tokensDisplay" class="text-xs font-black text-emerald-400">4096</span>
+                            </div>
+                            <input type="range" id="set-tokens" min="256" max="32768" step="256" value="4096" oninput="document.getElementById('tokensDisplay').textContent = this.value">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-emerald-200/70 uppercase tracking-wider">Temperature</label>
+                                <span id="tempDisplay" class="text-xs font-black text-emerald-400">0.7</span>
+                            </div>
+                            <input type="range" id="set-temp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tempDisplay').textContent = this.value">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-emerald-200/70 uppercase tracking-wider">Reasoning Effort</label>
+                                <span id="reasonDisplay" class="text-xs font-black text-emerald-400">Medium</span>
+                            </div>
+                            <input type="range" id="set-reason" min="0" max="2" step="1" value="1" oninput="const r=['Low','Medium','High']; document.getElementById('reasonDisplay').textContent = r[this.value]">
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="mt-2 pt-4 border-t border-emerald-500/20 pb-6 px-6 sm:px-10 flex justify-between items-center shrink-0">
+                <button onclick="logout()" class="px-5 py-2.5 rounded-xl text-red-400 font-bold flex items-center gap-2 neo-glass-btn-red text-xs sm:text-sm">
+                    <i class="ph ph-sign-out text-lg"></i> Log Out
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="closeSettings()" class="px-5 py-2.5 rounded-xl text-emerald-300 hover:text-white transition-all text-xs sm:text-sm font-bold uppercase tracking-wider">Cancel</button>
+                    <button onclick="saveSettings()" class="px-6 py-2.5 text-white rounded-xl font-bold uppercase tracking-wider neo-glass-btn text-xs sm:text-sm">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- APP MODE LOGIC (Text vs Vision) ---
+        let appMode = 'text';
+
+        function setAppMode(mode) {
+            appMode = mode;
+            const textBtn = document.getElementById('modeTextBtn');
+            const visBtn = document.getElementById('modeVisionBtn');
+            const suggestionsBlock = document.getElementById('suggestionsBlock');
+            const modelSelectorContainer = document.getElementById('modelSelectorContainer');
+            
+            if (mode === 'text') {
+                textBtn.className = "px-5 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 text-emerald-400";
+                visBtn.className = "px-5 py-1.5 rounded-full text-sm font-bold transition-all text-gray-400 hover:text-white";
+                messageInput.placeholder = "Message Vortex...";
+                suggestionsBlock.style.display = 'flex';
+                modelSelectorContainer.style.display = 'flex';
+            } else {
+                visBtn.className = "px-5 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 text-emerald-400";
+                textBtn.className = "px-5 py-1.5 rounded-full text-sm font-bold transition-all text-gray-400 hover:text-white";
+                messageInput.placeholder = "Describe an image to generate...";
+                suggestionsBlock.style.display = 'none';
+                modelSelectorContainer.style.display = 'none';
+                slashCommandMenu.classList.add('hidden');
+                slashCommandMenu.classList.remove('flex');
+            }
+        }
+
+        // --- API & SYSTEM CONFIG ---
+        const CLOUDFLARE_API = "https://ai-chat-backend.sawyerbobk563.workers.dev";
+        
+        let APP_CONFIG = {
+            apiKey: localStorage.getItem('aiApiKey') || "groqurl",
+            model: localStorage.getItem('aiModel') || "llama-3.1-8b-instant",
+            maxTokens: parseInt(localStorage.getItem('aiTokens')) || 4096,
+            temperature: parseFloat(localStorage.getItem('aiTemp')) || 0.7,
+            reasoningEffort: localStorage.getItem('aiReason') || "medium",
+            
+            // User & Data
+            preferredName: localStorage.getItem('prefName') || "",
+            aboutMe: localStorage.getItem('aboutMe') || "",
+            emailHistory: localStorage.getItem('emailHistory') || "",
+            reminders: localStorage.getItem('aiReminders') || "",
+
+            // EmailJS Config
+            emailjsServiceId: localStorage.getItem('emailjsServiceId') || "service_17usvk3",
+            emailjsTemplateId: localStorage.getItem('emailjsTemplateId') || "template_27rg9cj",
+            emailjsPublicKey: localStorage.getItem('emailjsPublicKey') || "H1Q7r_KdpW6yYyqn3"
+        };
+        
+        // Init EmailJS
+        if (APP_CONFIG.emailjsPublicKey) {
+            emailjs.init(APP_CONFIG.emailjsPublicKey);
+        }
+
+        // Setup marked.js options for code highlighting & tables
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            breaks: true
+        });
+
+        // State Variables
+        let conversationHistory = [];
+        let hasSentMessage = false;
+        let isTemporaryChat = false;
+        let sessions = []; // Cloud sessions
+        let currentSessionId = null;
+        let authUsername = null;
+        let stopTypingAnimation = false;
+        let pendingAttachments = []; 
+        const messageRawContent = {}; 
+
+        // Apply System Prompt Based on Settings
+        function getSystemPrompt() {
+            let prompt = `You are Vortex, an advanced, highly intelligent AI assistant. You have built-in capabilities to process context and answer user queries concisely and accurately. Please apply a ${APP_CONFIG.reasoningEffort.toUpperCase()} level of reasoning and thought effort to your responses. You can use markdown to generate detailed tables and structured layouts when presenting data.`;
+            if (APP_CONFIG.preferredName) prompt += `\n\nThe user's preferred name is: ${APP_CONFIG.preferredName}.`;
+            if (APP_CONFIG.aboutMe) prompt += `\n\nHere is information the user has provided about themselves:\n${APP_CONFIG.aboutMe}`;
+            if (APP_CONFIG.emailHistory) prompt += `\n\nHere is a log of emails the user has recently sent using the /sendemail command:\n${APP_CONFIG.emailHistory}`;
+            
+            prompt += `\n\nHere are the user's current Reminders and Notes:\n${APP_CONFIG.reminders || "(No reminders currently set)"}\n\nYou can help the user manage these reminders. If the user asks you to add a reminder/task, include the exact string <ADD_REMINDER>task</ADD_REMINDER> somewhere in your response. To remove one, include <REMOVE_REMINDER>task</REMOVE_REMINDER>. The system will automatically parse these tags and update the user's notes, so you don't need to explain how the tags work.`;
+
+            prompt += `\n\nTo ask the user a structured multiple-choice question, use this EXACT format anywhere in your response:\n<VORTEX_FORM title="Question Title" options="Option 1, Option 2, Option 3" />\nThe system will render this as an interactive UI card.`;
+
+            // Special instruction for deep model web source listing
+            if (APP_CONFIG.model === 'groq/compound') {
+                prompt += `\n\nIf you utilize your web search capabilities to pull current information, you MUST list your sources at the very end of your response.`;
+            }
+            
+            return prompt;
+        }
+
+        // UI Elements
+        const authScreen = document.getElementById('authScreen');
+        const authForm = document.getElementById('authForm');
+        const mainApp = document.getElementById('mainApp');
+        const greetingArea = document.getElementById('greetingArea');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const historyList = document.getElementById('historyList');
+        const navMenuBtn = document.getElementById('navMenuBtn');
+        const inputBorderWrap = document.getElementById('inputBorderWrap');
+        const attachmentTray = document.getElementById('attachmentTray');
+        const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+        const slashCommandMenu = document.getElementById('slashCommandMenu');
+        const ghostIconContainer = document.getElementById('ghostIconContainer');
+        const modeSwitcher = document.getElementById('modeSwitcher');
+
+        // Scroll-to-Bottom Logic
+        chatContainer.addEventListener('scroll', () => {
+            const distFromBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+            if (distFromBottom > 150) {
+                scrollToBottomBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            } else {
+                scrollToBottomBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }
+        });
+
+        scrollToBottomBtn.addEventListener('click', () => {
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+        });
+
+        // Slash Command Menu Listener with Dynamic Filtering
+        messageInput.addEventListener('input', () => {
+            const val = messageInput.value;
+            
+            if (appMode === 'vision') return; // No slash commands in vision mode
+
+            if (val.startsWith('/')) {
+                slashCommandMenu.classList.remove('hidden');
+                slashCommandMenu.classList.add('flex');
+                
+                const searchStr = val.toLowerCase();
+                let hasVisible = false;
+                document.querySelectorAll('.slash-option').forEach(btn => {
+                    const cmd = btn.dataset.cmd.trim();
+                    if (cmd.startsWith(searchStr)) {
+                        btn.style.display = 'flex';
+                        hasVisible = true;
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                });
+                
+                if (!hasVisible) {
+                    slashCommandMenu.classList.add('hidden');
+                    slashCommandMenu.classList.remove('flex');
+                }
+            } else {
+                slashCommandMenu.classList.add('hidden');
+                slashCommandMenu.classList.remove('flex');
+            }
+        });
+
+        document.querySelectorAll('.slash-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                messageInput.value = btn.dataset.cmd;
+                slashCommandMenu.classList.add('hidden');
+                slashCommandMenu.classList.remove('flex');
+                messageInput.focus();
+                toggleInputIcon();
+            });
+        });
+
+        // --- NEW SUGGESTION LOGIC ---
+        const suggestionsBtn = document.getElementById('suggestionsBtn');
+        const suggestionsPanel = document.getElementById('suggestionsPanel');
+        
+        suggestionsBtn.addEventListener('click', () => {
+            if (suggestionsPanel.classList.contains('hidden')) {
+                suggestionsPanel.classList.remove('hidden');
+                setTimeout(() => suggestionsPanel.classList.remove('opacity-0', 'translate-y-2'), 10);
+            } else {
+                suggestionsPanel.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => suggestionsPanel.classList.add('hidden'), 300);
+            }
+        });
+
+        function useSuggestion(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+        }
+        
+        function updateSuggestionsForMode(isGhost) {
+            const panel = document.getElementById('suggestionsPanel');
+            if (!panel) return;
+            
+            if (isGhost) {
+                panel.innerHTML = `
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('What are the benefits of incognito browsing?')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Benefits of incognito browsing
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('Tell me a ghost story')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Tell me a ghost story
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('How do I clear my browser cache?')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> How to clear browser cache
+                    </button>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('/itunes blinding lights')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Play "Blinding Lights"
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('Explain quantum computing like I am 5')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Explain quantum computing like I am 5
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('Create a markdown table comparing standard vs electric cars')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Compare standard vs electric cars
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('/genjutsu')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Search for the latest Anime info
+                    </button>
+                    <button class="shrink-0 w-64 px-4 py-3 rounded-xl neo-glass text-sm text-left text-gray-300 hover:text-white transition-all border border-white/5 whitespace-normal" onclick="useSuggestion('/weather New York')">
+                        <span class="font-bold text-emerald-400 mr-2">/</span> Check the weather in New York
+                    </button>
+                `;
+            }
+        }
+
+        // Funny Random Greetings
+        const funGreetings = [
+            "Ready to conquer the world", "Welcome back, Earthling", "Let's make some magic",
+            "Greetings, time traveler", "Awaiting your command", "Systems online and ready",
+            "What's the master plan?", "Let's bend reality", "Initializing genius mode",
+            "Your digital wish is my command", "Sparks are flying", "Let's dive into the matrix",
+            "The vortex is open", "Brain waves synchronized", "Let's brew some ideas"
+        ];
+
+        function changeGreeting() {
+            document.getElementById('timeGreeting').innerHTML = funGreetings[Math.floor(Math.random() * funGreetings.length)] + ",";
+        }
+
+        // Animated Welcome Subtitle
+        const welcomeTextStr = "How can Vortex assist you today?";
+        let wIdx = 0;
+        function typeWelcomeSubtitle() {
+            if (stopTypingAnimation || isTemporaryChat || appMode === 'vision') return;
+            if (wIdx < welcomeTextStr.length) {
+                document.getElementById('welcomeSubtitle').innerHTML += welcomeTextStr.charAt(wIdx);
+                wIdx++;
+                setTimeout(typeWelcomeSubtitle, 40);
+            }
+        }
+
+        // --- AUTHENTICATION LOGIC ---
+        let isLoginMode = true;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            authUsername = localStorage.getItem('authUsername') || sessionStorage.getItem('authUsername');
+            
+            if (token && authUsername) {
+                const success = await fetchChatsFromCloud(token);
+                if (success) {
+                    authScreen.style.display = 'none';
+                    initApp(authUsername);
+                } else {
+                    localStorage.removeItem('authToken'); sessionStorage.removeItem('authToken');
+                    localStorage.removeItem('authUsername'); sessionStorage.removeItem('authUsername');
+                    document.getElementById('authUsername').focus();
+                }
+            } else {
+                document.getElementById('authUsername').focus();
+            }
+
+            conversationHistory = [{ role: "system", content: getSystemPrompt() }];
+            updateSuggestionsForMode(false);
+            setAppMode('text');
+        });
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').textContent = isLoginMode ? "Sign In" : "Register";
+            document.getElementById('authSubmitBtn').textContent = isLoginMode ? "Sign In" : "Register";
+            document.getElementById('authToggleBtn').textContent = isLoginMode ? "Need an account? Register" : "Have an account? Sign In";
+            
+            document.getElementById('authError').classList.add('hidden');
+            document.getElementById('authSuccess').classList.add('hidden');
+        }
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('authUsername').value.trim();
+            const passwordInput = document.getElementById('authPassword').value;
+            const rememberMe = document.getElementById('authRemember').checked;
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            
+            if (!usernameInput || !passwordInput) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="ph ph-spinner-gap animate-spin"></i> Processing...`;
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+
+            const endpoint = isLoginMode ? '/api/login' : '/api/register';
+            
+            try {
+                const res = await fetch(`${CLOUDFLARE_API}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "An error occurred");
+
+                if (isLoginMode) {
+                    const storageObj = rememberMe ? localStorage : sessionStorage;
+                    storageObj.setItem('authToken', data.token);
+                    storageObj.setItem('authUsername', data.username);
+                    authUsername = data.username;
+                    
+                    await fetchChatsFromCloud(data.token);
+                    
+                    authScreen.classList.add('opacity-0');
+                    setTimeout(() => {
+                        authScreen.style.display = 'none';
+                        initApp(data.username);
+                    }, 700);
+                } else {
+                    successDiv.textContent = "Account created! You can now log in.";
+                    successDiv.classList.remove('hidden');
+                    document.getElementById('authPassword').value = '';
+                    toggleAuthMode();
+                }
+
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = isLoginMode ? "Sign In" : "Register";
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('authToken'); sessionStorage.removeItem('authToken');
+            localStorage.removeItem('authUsername'); sessionStorage.removeItem('authUsername');
+            window.location.reload();
+        }
+
+        // --- CLOUD SYNC LOGIC ---
+        function getActiveToken() { return localStorage.getItem('authToken') || sessionStorage.getItem('authToken'); }
+
+        async function fetchChatsFromCloud(token = getActiveToken()) {
+            try {
+                const res = await fetch(`${CLOUDFLARE_API}/api/chats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) return false;
+                sessions = await res.json();
+                renderHistoryList();
+                return true;
+            } catch (e) { return false; }
+        }
+
+        async function saveSessionToCloud(sessionId) {
+            if (isTemporaryChat) return; // Block cloud save
+            const session = sessions.find(s => s.id === sessionId);
+            if (!session) return;
+            try {
+                await fetch(`${CLOUDFLARE_API}/api/chats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getActiveToken()}` },
+                    body: JSON.stringify(session)
+                });
+            } catch (e) { console.error("Failed to save to cloud", e); }
+        }
+
+        async function deleteSessionFromCloud(sessionId) {
+            try {
+                await fetch(`${CLOUDFLARE_API}/api/chats/${sessionId}`, {
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${getActiveToken()}` }
+                });
+            } catch (e) { console.error("Failed to delete from cloud", e); }
+        }
+
+        function initApp(name) {
+            userNameDisplay.textContent = APP_CONFIG.preferredName || name;
+            changeGreeting();
+            document.getElementById('welcomeSubtitle').innerHTML = "";
+            wIdx = 0;
+            stopTypingAnimation = false;
+            if(appMode === 'text') setTimeout(typeWelcomeSubtitle, 500);
+            
+            mainApp.classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('navMenuBtn').checked = false; // ensure closed
+            messageInput.focus();
+        }
+
+        // --- Nav Menu Click-Outside Logic ---
+        document.addEventListener('click', (e) => {
+            const menuOpen = document.getElementById('menu-open');
+            const circularMenu = document.getElementById('mainCircularNav');
+            if (menuOpen.checked && circularMenu && !circularMenu.contains(e.target)) {
+                menuOpen.checked = false;
+            }
+            
+            if(openMenuId) {
+                const oldMenu = document.getElementById(`menu-${openMenuId}`);
+                if(oldMenu) oldMenu.classList.add('hidden');
+                openMenuId = null;
+            }
+            slashCommandMenu.classList.add('hidden');
+            slashCommandMenu.classList.remove('flex');
+        });
+
+        // --- Temporary Chat (Ghost Mode) ---
+        function startTemporaryChat() {
+            if (isTemporaryChat) {
+                startNewChat(); // Toggle Off
+                return;
+            }
+            
+            setAppMode('text'); // Force text mode for ghost
+
+            chatContainer.innerHTML = '';
+            conversationHistory = [{ role: "system", content: getSystemPrompt() }];
+            hasSentMessage = false;
+            currentSessionId = null;
+            isTemporaryChat = true; // Block saving
+            pendingAttachments = [];
+            renderAttachments();
+            
+            stopTypingAnimation = true; // Stop normal typing
+            document.getElementById('timeGreeting').innerHTML = "👻 <strong>Ghost Mode Active.</strong>";
+            document.getElementById('welcomeSubtitle').innerHTML = "These chats won't be saved.";
+            
+            typePlaceholder();
+            inputBorderWrap.classList.remove('border-static');
+            navMenuBtn.classList.remove('glass-gray-nav');
+            modeSwitcher.classList.remove('opacity-0', 'pointer-events-none');
+            
+            document.getElementById('chatTitleHeader').classList.add('opacity-0');
+
+            greetingArea.classList.remove('hidden', 'fade-out');
+            chatContainer.classList.add('hidden');
+            closeHistory();
+
+            // Strip Emojis from Model Selector
+            const modelSelect = document.getElementById('inlineModelSelect');
+            if (modelSelect) {
+                Array.from(modelSelect.options).forEach(option => {
+                    option.text = option.text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim();
+                });
+            }
+
+            // Update Guest Mode Toggle UI
+            const tempBtn = document.getElementById('tempChatBtn');
+            tempBtn.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/50');
+            tempBtn.classList.remove('text-gray-400', 'glass-panel');
+
+            // Update Suggestions
+            updateSuggestionsForMode(true);
+
+            messageInput.focus();
+        }
+
+        // --- File & Image-to-Text Upload ---
+        const fileUpload = document.getElementById('fileUpload');
+        const attachBtn = document.getElementById('attachBtn');
+
+        attachBtn.addEventListener('click', () => fileUpload.click());
+
+        fileUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const originalIcon = attachBtn.innerHTML;
+            attachBtn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl text-emerald-400"></i>';
+            attachBtn.disabled = true;
+
+            try {
+                let extractedText = "";
+                if (file.type.startsWith('image/')) {
+                    const { data: { text } } = await Tesseract.recognize(file, 'eng');
+                    if (text.trim()) extractedText = text.trim();
+                    else throw new Error("No text found.");
+                } else {
+                    extractedText = await file.text();
+                }
+                
+                pendingAttachments.push({ name: file.name, text: extractedText });
+                renderAttachments();
+                toggleInputIcon();
+            } catch (err) {
+                console.error(err);
+                alert("Error extracting text from file.");
+            } finally {
+                attachBtn.innerHTML = originalIcon;
+                attachBtn.disabled = false;
+                fileUpload.value = '';
+            }
+        });
+
+        function renderAttachments() {
+            attachmentTray.innerHTML = pendingAttachments.map((att, i) => `
+                <div class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-1 rounded-md flex items-center gap-1.5 border border-emerald-500/30">
+                    <i class="ph ph-file-text"></i>
+                    <span class="max-w-[120px] truncate">${escapeHTML(att.name)}</span>
+                    <button type="button" onclick="removeAttachment(${i})" class="hover:text-white ml-1"><i class="ph ph-x font-bold"></i></button>
+                </div>
+            `).join('');
+            autoResize(messageInput);
+        }
+
+        window.removeAttachment = function(index) {
+            pendingAttachments.splice(index, 1);
+            renderAttachments();
+            toggleInputIcon();
+        };
+
+        // --- Voice Recognition & Input UI Setup ---
+        const inputActionIcon = document.getElementById('inputActionIcon');
+        const inlineModelSelect = document.getElementById('inlineModelSelect');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onresult = (event) => {
+                let final_transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript;
+                }
+                if (final_transcript) {
+                    messageInput.value += (messageInput.value ? ' ' : '') + final_transcript;
+                    autoResize(messageInput);
+                    toggleInputIcon();
+                }
+            };
+            recognition.onend = () => { isRecording = false; toggleInputIcon(); };
+        }
+
+        function toggleInputIcon() {
+            if (messageInput.value.trim().length > 0 || pendingAttachments.length > 0) {
+                inputActionIcon.className = "ph ph-arrow-up text-xl font-bold text-emerald-400";
+            } else {
+                if (isRecording) {
+                    inputActionIcon.className = "ph ph-microphone text-xl font-bold text-red-500 animate-pulse";
+                } else {
+                    inputActionIcon.className = "ph ph-microphone text-xl font-bold text-emerald-400";
+                }
+            }
+        }
+        
+        messageInput.addEventListener('input', toggleInputIcon);
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+            if (textarea.value === '') textarea.style.height = 'auto';
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            return now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + 
+                   now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                slashCommandMenu.classList.add('hidden'); // Hide menu if open
+                chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])
+            );
+        }
+
+        function renderUserMessage(content, attachments = []) {
+            const timeStr = getTimestamp();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex flex-col items-end w-full message-enter mb-2';
+            
+            let attachHtml = '';
+            if (attachments && attachments.length > 0) {
+                attachHtml = `<div class="flex gap-1 mb-1.5 justify-end flex-wrap">` + 
+                    attachments.map(a => `<span class="bg-white/10 text-xs px-2 py-1 rounded text-gray-300"><i class="ph ph-paperclip mr-1"></i>${escapeHTML(a.name)}</span>`).join('') + 
+                `</div>`;
+            }
+
+            msgDiv.innerHTML = `
+                <div class="max-w-[85%] neo-glass text-white rounded-3xl rounded-br-sm px-5 py-3">
+                    ${attachHtml}
+                    ${content ? `<p class="whitespace-pre-wrap text-sm">${escapeHTML(content)}</p>` : ''}
+                </div>
+                <span class="text-[10px] text-gray-500 mt-1 mr-2">${timeStr}</span>
+            `;
+            chatContainer.appendChild(msgDiv);
+        }
+
+        function createAssistantMessagePlaceholder(isWebSearch = false) {
+            const timeStr = getTimestamp();
+            const msgId = 'msg-' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex flex-col items-start w-full message-enter mb-6';
+            
+            const webIcon = isWebSearch ? `<i class="ph ph-globe text-emerald-400 text-sm animate-pulse ml-1" title="Accessing Web/External API"></i>` : '';
+
+            msgDiv.innerHTML = `
+                <div class="flex items-center gap-1.5 mb-2 ml-2">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C12 2 12 10 20 12C12 14 12 22 12 22C12 22 12 14 4 12C12 10 12 2 12 2Z" fill="url(#vortexGrad)"/>
+                        <defs>
+                            <linearGradient id="vortexGrad" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#10b981"/>
+                                <stop offset="0.5" stop-color="#06b6d4"/>
+                                <stop offset="1" stop-color="#3b82f6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    ${webIcon}
+                </div>
+                <div class="flex-1 w-full max-w-full overflow-hidden bg-transparent rounded-3xl px-2 py-1 markdown-body text-gray-200 streaming" id="${msgId}">
+                    <div class="flex gap-1.5 items-center h-6 mt-2 ml-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#10b981] to-[#06b6d4] bounce-dot"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] bounce-dot"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-[#3b82f6] bounce-dot"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 mt-2 ml-2">
+                    <span class="text-[10px] text-gray-500">${timeStr}</span>
+                    <div id="actions-${msgId}" class="flex items-center gap-1 opacity-0 transition-opacity duration-300 pointer-events-none">
+                        <button onclick="copyMessage('${msgId}')" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors pointer-events-auto" title="Copy Response">
+                            <i class="ph ph-copy text-sm" id="copy-icon-${msgId}"></i>
+                        </button>
+                        <button onclick="resendMessage()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors pointer-events-auto" title="Resend Prompt">
+                            <i class="ph ph-arrows-clockwise text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+            return msgId;
+        }
+
+        function updateAssistantMessage(id, content) {
+            messageRawContent[id] = content;
+            
+            // 1. Mask the reminder tags for the UI so they render nicely instead of breaking markdown
+            let displayContent = content
+                .replace(/<ADD_REMINDER>([\s\S]*?)<\/ADD_REMINDER>/gi, '\n\n*⏳ Adding reminder: "')
+                .replace(/<\/ADD_REMINDER>/gi, '"*\n\n')
+                .replace(/<REMOVE_REMINDER>([\s\S]*?)<\/REMOVE_REMINDER>/gi, '\n\n*⏳ Removing reminder: "')
+                .replace(/<\/REMOVE_REMINDER>/gi, '"*\n\n');
+
+            // 2. Parse Custom UI Question Popups (Claude-style)
+            // Expected format: <VORTEX_FORM title="Question Title" options="Option 1, Option 2, Option 3" />
+            displayContent = displayContent.replace(/<VORTEX_FORM\s+title="([^"]+)"\s+options="([^"]+)"\s*\/>/gi, (match, title, optionsStr) => {
+                const options = optionsStr.split(',').map(o => o.trim());
+                let buttonsHtml = options.map(opt => `<button onclick="useSuggestion('${opt.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 rounded-lg text-sm text-emerald-100 font-medium transition-colors">${escapeHTML(opt)}</button>`).join('');
+                
+                return `\n\n<div class="my-4 p-4 neo-glass rounded-xl flex flex-col gap-3 w-full sm:max-w-sm border-emerald-500/40 shadow-lg">
+                    <h4 class="font-bold text-white text-sm">${escapeHTML(title)}</h4>
+                    <div class="flex flex-col gap-2">${buttonsHtml}</div>
+                </div>\n\n`;
+            });
+
+            const msgElement = document.getElementById(id);
+            if (msgElement) {
+                msgElement.innerHTML = marked.parse(displayContent);
+            }
+        }
+
+        function renderAssistantError(msg) {
+            const placeholderId = createAssistantMessagePlaceholder();
+            document.getElementById(placeholderId).classList.remove('streaming');
+            document.getElementById(placeholderId).innerHTML = `
+                <div class="neo-glass border border-red-500/50 bg-red-500/10 p-4 rounded-2xl flex items-start gap-3 mt-2 max-w-lg">
+                    <i class="ph ph-warning-circle text-red-400 text-xl mt-0.5 shrink-0"></i>
+                    <div>
+                        <h4 class="text-red-400 font-semibold text-sm">Notice</h4>
+                        <p class="text-gray-300 text-xs mt-1 leading-relaxed">${escapeHTML(msg)}</p>
+                    </div>
+                </div>
+            `;
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+        }
+
+        async function generateTitle(promptStr, sessionId) {
+            if (isTemporaryChat) return;
+            try {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${APP_CONFIG.apiKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: "llama-3.1-8b-instant",
+                        messages: [{role: "user", content: `Generate a 1 to 2 word maximum title for this prompt. No quotes, no punctuation: ${promptStr}`}],
+                        max_tokens: 10,
+                        temperature: 0.3
+                    })
+                });
+                const data = await res.json();
+                const title = data.choices[0].message.content.trim().replace(/["']/g, '');
+                const session = sessions.find(s => s.id === sessionId);
+                if(session) {
+                    session.title = title || "Chat";
+                    document.getElementById('chatTitleDisplay').textContent = session.title;
+                    renderHistoryList();
+                    saveSessionToCloud(sessionId); 
+                }
+            } catch(e) {}
+        }
+
+        // --- NEW SESSION / TITLE HELPER ---
+        async function ensureSessionStarted(firstMessageText) {
+            if (isTemporaryChat) return; 
+            if (conversationHistory.length === 1 || currentSessionId === null) {
+                currentSessionId = Date.now().toString();
+                sessions.unshift({ id: currentSessionId, title: "New Chat...", updated_at: Date.now(), history: [] });
+                document.getElementById('chatTitleDisplay').textContent = "New Chat...";
+                renderHistoryList();
+                generateTitle(firstMessageText, currentSessionId);
+                await new Promise(r => setTimeout(r, 600));
+            }
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message && pendingAttachments.length === 0 && !message.startsWith('/upload')) return;
+
+            // UI Transitions for First Message
+            if (!hasSentMessage) {
+                hasSentMessage = true;
+                stopTypingAnimation = true;
+                inputBorderWrap.classList.add('border-static');
+                navMenuBtn.classList.add('glass-gray-nav');
+                ghostIconContainer.classList.add('opacity-0', 'pointer-events-none');
+                modeSwitcher.classList.add('opacity-0', 'pointer-events-none');
+                
+                greetingArea.classList.add('fade-out');
+                setTimeout(() => {
+                    greetingArea.classList.add('hidden');
+                    chatContainer.classList.remove('hidden');
+                    document.getElementById('chatTitleHeader').classList.remove('opacity-0');
+                    if (isTemporaryChat) {
+                        document.getElementById('chatTitleDisplay').textContent = "Ghost Mode Active";
+                        document.getElementById('chatTitleDisplay').classList.add('text-red-400');
+                        document.querySelector('#chatTitleHeader i').className = "ph ph-ghost text-red-400";
+                    } else {
+                        document.getElementById('chatTitleDisplay').classList.remove('text-red-400');
+                        document.querySelector('#chatTitleHeader i').className = "ph ph-chat-circle text-emerald-400";
+                    }
+                }, 600);
+            }
+
+            messageInput.value = '';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            messageInput.style.height = 'auto';
+            document.getElementById('slashCommandMenu').classList.add('hidden');
+
+            // ==========================================
+            // VISION MODE LOGIC
+            // ==========================================
+            if (appMode === 'vision') {
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Synthesizing image...</span>";
+
+                try {
+                    const res = await fetch("https://2free-image-generation-api.sawyerbobk563.workers.dev/", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": "Bearer yinghua",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ prompt: message }),
+                    });
+                    
+                    if (!res.ok) throw new Error("Image generation failed. Ensure your Worker is active.");
+                    
+                    const blob = await res.blob();
+                    const imgUrl = URL.createObjectURL(blob);
+                    
+                    const finalOutput = `**Prompt:** *${message}*\n\n<img src="${imgUrl}" class="rounded-xl mt-2 w-full max-h-[500px] object-cover shadow-lg border border-emerald-500/20" alt="Generated Image"/>`;
+                    updateAssistantMessage(placeholderId, finalOutput);
+                    
+                    // We don't save blobs to history/cloud as they expire. In a real app, you'd upload the blob to a bucket first.
+                    // For this demo, Vision mode images are temporary for the session.
+
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ **Error:** ${err.message}`);
+                }
+                
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+            // ==========================================
+            // TEXT MODE LOGIC (Slash Commands & Standard)
+            // ==========================================
+
+            // --- /ITUNES COMMAND ---
+            if (message.startsWith('/itunes')) {
+                const query = message.replace('/itunes', '').trim();
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                
+                await ensureSessionStarted(message); 
+
+                if (!query) {
+                    renderAssistantError("Please provide a song name or description: `/itunes [song]`");
+                    messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                    return;
+                }
+
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Searching Apple Music...</span>";
+
+                try {
+                    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+                    const data = await res.json();
+                    
+                    if (data.resultCount === 0) throw new Error("No song found for that query on iTunes.");
+                    const song = data.results[0];
+                    
+                    // Format the interactive song card
+                    const songCard = `
+<div class="flex items-center gap-4 neo-glass p-3 rounded-xl max-w-sm mt-2 mb-4 shadow-lg border-emerald-500/30">
+    <img src="${song.artworkUrl100}" alt="Cover" class="w-16 h-16 rounded-md shadow-md">
+    <div class="flex-1 min-w-0">
+        <h4 class="text-white font-bold truncate text-sm">${song.trackName}</h4>
+        <p class="text-emerald-400 text-xs truncate font-medium">${song.artistName}</p>
+        <audio controls src="${song.previewUrl}" class="w-full mt-2 custom-audio"></audio>
+    </div>
+</div>`;
+                    
+                    const finalPayload = `The user used the /itunes command to search for "${query}". The API successfully found the song "${song.trackName}" by ${song.artistName} from the album ${song.collectionName}. Please provide a brief fun fact, context, or summary about this song or artist. List your source as "iTunes API" at the very end.`;
+                    
+                    conversationHistory[0].content = getSystemPrompt();
+                    conversationHistory.push({ role: "user", content: finalPayload });
+
+                    // Inject the Song Card UI immediately
+                    updateAssistantMessage(placeholderId, songCard);
+                    conversationHistory.push({ role: "assistant", content: `(Played Preview: ${song.trackName} by ${song.artistName})`});
+                    
+                    // Trigger AI for the text follow-up
+                    const followUpId = createAssistantMessagePlaceholder();
+                    document.getElementById(followUpId).classList.add('streaming');
+                    await triggerAIResponse(finalPayload, followUpId);
+
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ **iTunes Error:** ${err.message}`);
+                }
+                
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+
+            // --- /UPLOAD COMMAND (GOFILE) ---
+            if (message.startsWith('/upload')) {
+                const uploader = document.createElement('input');
+                uploader.type = 'file';
+                uploader.onchange = async (ev) => {
+                    const file = ev.target.files[0];
+                    if (!file) return;
+                    
+                    renderUserMessage(message + ` (Selected: ${file.name})`);
+                    await ensureSessionStarted(message);
+                    
+                    const placeholderId = createAssistantMessagePlaceholder(true);
+                    document.getElementById(placeholderId).classList.remove('streaming');
+                    document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Uploading to Gofile...</span>";
+                    
+                    try {
+                        const serverRes = await fetch('https://api.gofile.io/servers');
+                        const serverData = await serverRes.json();
+                        if (serverData.status !== 'ok') throw new Error("Could not reach Gofile servers.");
+                        const serverName = serverData.data.servers[0].name;
+                        
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        const uploadRes = await fetch(`https://${serverName}.gofile.io/contents/upload/file`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const uploadData = await uploadRes.json();
+                        
+                        if (uploadData.status !== 'ok') throw new Error("Upload failed");
+                        
+                        const link = uploadData.data.downloadPage;
+                        const responseText = `✅ **File Successfully Uploaded!**\n\n**File:** ${file.name}\n**Link:** [${link}](${link})\n\n*(Source: Gofile.io)*`;
+                        
+                        updateAssistantMessage(placeholderId, responseText);
+                        
+                        conversationHistory.push({ role: "user", content: `I uploaded a file named ${file.name} to Gofile.` });
+                        conversationHistory.push({ role: "assistant", content: responseText });
+                        
+                        if (!isTemporaryChat) saveSessionToCloud(currentSessionId);
+                        
+                    } catch(err) {
+                        updateAssistantMessage(placeholderId, `❌ **Upload Error:** ${err.message}`);
+                    }
+                    
+                    messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                };
+                uploader.click();
+                return;
+            }
+
+            // --- SMART /SENDEMAIL COMMAND ---
+            if (message.startsWith('/sendemail')) {
+                const rawCommandText = message.replace('/sendemail', '').trim();
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                
+                await ensureSessionStarted(message); 
+
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> AI is drafting and sending your email...</span>";
+
+                try {
+                    const parseRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${APP_CONFIG.apiKey}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: APP_CONFIG.model,
+                            messages: [
+                                { role: "system", content: "You extract email details into JSON. Return ONLY a valid JSON object with three keys: 'to' (email address), 'subject' (invent short subject if missing), and 'message' (body). No markdown formatting." },
+                                { role: "user", content: rawCommandText }
+                            ],
+                            response_format: { type: "json_object" },
+                            temperature: 0.1
+                        })
+                    });
+                    
+                    const parseData = await parseRes.json();
+                    let emailData;
+                    try {
+                        const rawJson = parseData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+                        emailData = JSON.parse(rawJson);
+                    } catch (e) { throw new Error("I couldn't understand the email details. Please ensure you include an email address and a message."); }
+
+                    if (!emailData.to) throw new Error("I couldn't find a recipient email address in your request.");
+                    if (!emailData.message) throw new Error("I couldn't figure out what you want the email to say.");
+
+                    await emailjs.send(APP_CONFIG.emailjsServiceId, APP_CONFIG.emailjsTemplateId, {
+                        to_email: emailData.to,
+                        subject: emailData.subject,
+                        message: emailData.message,
+                        reply_to: APP_CONFIG.preferredName || authUsername || "Vortex User"
+                    });
+
+                    // Update Settings Log
+                    const emailLog = `[${new Date().toLocaleDateString()}] To: ${emailData.to} | Subject: ${emailData.subject}`;
+                    APP_CONFIG.emailHistory = (emailLog + "\n" + APP_CONFIG.emailHistory).trim();
+                    localStorage.setItem('emailHistory', APP_CONFIG.emailHistory);
+                    document.getElementById('set-emailhistory').value = APP_CONFIG.emailHistory;
+
+                    updateAssistantMessage(placeholderId, `✅ **Email Sent Successfully!**\n\n**To:** ${emailData.to}\n**Subject:** ${emailData.subject}\n\n**Message:**\n${emailData.message}`);
+                    
+                    conversationHistory.push({ role: "user", content: message });
+                    conversationHistory.push({ role: "assistant", content: `I sent an email to ${emailData.to} with the subject "${emailData.subject}".` });
+
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ **Failed to send email:** ${err.message}`);
+                }
+                
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+            // --- /IP COMMAND ---
+            if (message.startsWith('/ip')) {
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                await ensureSessionStarted(message); 
+
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Locating IP address...</span>";
+
+                try {
+                    const ipRes = await fetch('http://ip-api.com/json/');
+                    const ipData = await ipRes.json();
+                    const finalPayload = `The user used the /ip command. The IP API returned this information about their connection: ${JSON.stringify(ipData)}. Please summarize this to the user in a friendly, conversational way. List your source as "IP-API" at the very end.`;
+                    
+                    conversationHistory[0].content = getSystemPrompt();
+                    conversationHistory.push({ role: "user", content: finalPayload });
+
+                    document.getElementById(placeholderId).classList.add('streaming');
+                    await triggerAIResponse(finalPayload, placeholderId);
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ Failed to get IP info: ${err.message}. Note: if using HTTPS, the free IP API may be blocked by your browser's mixed content policy.`);
+                }
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+            // --- /GENJUTSU (API) COMMAND ---
+            if (message.startsWith('/genjutsu')) {
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                await ensureSessionStarted(message); 
+
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Fetching from Genjutsu Social API...</span>";
+
+                try {
+                    const genRes = await fetch('https://genjutsu-social.vercel.app/api/genjutsu-feed?page=1&limit=10');
+                    if (!genRes.ok) throw new Error("Could not connect to Genjutsu API");
+                    const genData = await genRes.json();
+                    
+                    const finalPayload = `The user used the /genjutsu command. The Genjutsu Feed API returned these recent posts: ${JSON.stringify(genData.posts)}. Please summarize the latest activity (content, author, likes, media) in a friendly way. List the source as "Genjutsu Feed API" at the very end.`;
+                    
+                    conversationHistory[0].content = getSystemPrompt();
+                    conversationHistory.push({ role: "user", content: finalPayload });
+
+                    document.getElementById(placeholderId).classList.add('streaming');
+                    await triggerAIResponse(finalPayload, placeholderId);
+
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ Failed to fetch Genjutsu info: ${err.message}`);
+                }
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+            // --- /WEATHER COMMAND ---
+            if (message.startsWith('/weather')) {
+                const city = message.replace('/weather', '').trim();
+                renderUserMessage(message, pendingAttachments);
+                pendingAttachments = []; renderAttachments();
+                await ensureSessionStarted(message); 
+
+                if (!city) {
+                    renderAssistantError("Please provide a city name: `/weather [city]`");
+                    messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                    return;
+                }
+
+                const placeholderId = createAssistantMessagePlaceholder(true);
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = "<span class='text-emerald-400 animate-pulse text-sm'><i class='ph ph-spinner-gap animate-spin'></i> Fetching satellite weather data...</span>";
+
+                try {
+                    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+                    const geoData = await geoRes.json();
+                    if (!geoData.results || geoData.results.length === 0) throw new Error("City not found");
+                    const { latitude, longitude, name, admin1, country } = geoData.results[0];
+
+                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+                    const weatherData = await weatherRes.json();
+
+                    const finalPayload = `The user asked for the weather in ${city}. The Open-Meteo API returned this for ${name}, ${admin1 || ''} ${country}: ${JSON.stringify(weatherData.current_weather)}. Please summarize this in a friendly, conversational way. List your source as "Open-Meteo API" at the very end.`;
+                    
+                    conversationHistory[0].content = getSystemPrompt();
+                    conversationHistory.push({ role: "user", content: finalPayload });
+
+                    document.getElementById(placeholderId).classList.add('streaming');
+                    await triggerAIResponse(finalPayload, placeholderId);
+
+                } catch (err) {
+                    updateAssistantMessage(placeholderId, `❌ Failed to get weather: ${err.message}`);
+                }
+                messageInput.disabled = false; sendBtn.disabled = false; toggleInputIcon(); messageInput.focus();
+                return;
+            }
+
+            // --- STANDARD AI CHAT ---
+            let finalPayload = message;
+            if (pendingAttachments.length > 0) {
+                const attachContext = pendingAttachments.map(a => `[Attached Document: ${a.name}]\n${a.text}`).join('\n\n');
+                finalPayload += (finalPayload ? '\n\n' : '') + attachContext;
+            }
+
+            inputActionIcon.className = "ph ph-spinner-gap animate-spin text-xl font-bold text-gray-400";
+            renderUserMessage(message, pendingAttachments);
+            conversationHistory[0].content = getSystemPrompt();
+            conversationHistory.push({ role: "user", content: finalPayload });
+            
+            pendingAttachments = [];
+            renderAttachments();
+
+            await ensureSessionStarted(finalPayload);
+
+            const isDeepModel = inlineModelSelect.value === 'deep';
+            const placeholderId = createAssistantMessagePlaceholder(isDeepModel);
+            document.getElementById(placeholderId).classList.add('streaming');
+            await triggerAIResponse(finalPayload, placeholderId);
+            
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            toggleInputIcon();
+            messageInput.focus();
+        });
+
+        async function triggerAIResponse(payload, placeholderId) {
+            let assistantFullResponse = "";
+            let activeModelId = APP_CONFIG.model;
+            const uiModelSelection = inlineModelSelect.value;
+            if (uiModelSelection === 'fast') activeModelId = 'llama-3.1-8b-instant';
+            else if (uiModelSelection === 'thinking') activeModelId = 'llama-3.3-70b-versatile';
+            else if (uiModelSelection === 'deep') activeModelId = 'groq/compound';
+
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${APP_CONFIG.apiKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: activeModelId,
+                        messages: conversationHistory,
+                        temperature: APP_CONFIG.temperature,
+                        max_tokens: APP_CONFIG.maxTokens,
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429) throw new Error("RATE_LIMIT");
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || `API Error: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); 
+
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.substring(6);
+                            if (dataStr === '[DONE]') break;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                const delta = data.choices[0]?.delta?.content || '';
+                                if (delta) {
+                                    assistantFullResponse += delta;
+                                    updateAssistantMessage(placeholderId, assistantFullResponse);
+                                }
+                            } catch (e) { }
+                        }
+                    }
+                }
+
+                // AI REMINDERS SYSTEM (PROCESS AFTER STREAM)
+                let addedReminders = [];
+                let removedReminders = [];
+
+                assistantFullResponse = assistantFullResponse.replace(/<ADD_REMINDER>([\s\S]*?)<\/ADD_REMINDER>/gi, (match, p1) => {
+                    addedReminders.push(p1.trim());
+                    return `\n\n*✅ Added to reminders: "${p1.trim()}"*\n\n`;
+                });
+
+                assistantFullResponse = assistantFullResponse.replace(/<REMOVE_REMINDER>([\s\S]*?)<\/REMOVE_REMINDER>/gi, (match, p1) => {
+                    removedReminders.push(p1.trim());
+                    return `\n\n*🗑️ Removed from reminders: "${p1.trim()}"*\n\n`;
+                });
+
+                if (addedReminders.length > 0 || removedReminders.length > 0) {
+                    let currentReminders = APP_CONFIG.reminders.split('\n').filter(r => r.trim());
+                    
+                    addedReminders.forEach(r => currentReminders.push("- " + r));
+                    removedReminders.forEach(r => {
+                        currentReminders = currentReminders.filter(existing => !existing.toLowerCase().includes(r.toLowerCase()));
+                    });
+
+                    APP_CONFIG.reminders = currentReminders.join('\n');
+                    localStorage.setItem('aiReminders', APP_CONFIG.reminders);
+                    document.getElementById('set-reminders').value = APP_CONFIG.reminders;
+                    
+                    // Final UI render with nice italics replacing the ugly tags
+                    updateAssistantMessage(placeholderId, assistantFullResponse);
+                }
+                
+                conversationHistory.push({ role: "assistant", content: assistantFullResponse });
+
+                if (!isTemporaryChat) {
+                    const session = sessions.find(s => s.id === currentSessionId);
+                    if (session) {
+                        session.history = [...conversationHistory];
+                        session.updated_at = Date.now();
+                        saveSessionToCloud(currentSessionId);
+                    }
+                }
+                
+                const placeholderEl = document.getElementById(placeholderId);
+                placeholderEl.classList.remove('streaming'); 
+                document.getElementById(`actions-${placeholderId}`).classList.remove('opacity-0', 'pointer-events-none');
+
+            } catch (error) {
+                let friendlyError = error.message;
+                if (error.message === "RATE_LIMIT" || error.message.includes("429")) {
+                    friendlyError = "You have reached your API rate limit. Please wait a moment before trying again.";
+                } else if (error.message.includes("401")) {
+                    friendlyError = "Authentication failed. Please check if your Groq API Key is valid in settings.";
+                } else if (error.message.includes("Failed to fetch")) {
+                    friendlyError = "Network error. Please check your internet connection.";
+                }
+
+                document.getElementById(placeholderId).classList.remove('streaming');
+                document.getElementById(placeholderId).innerHTML = `
+                    <div class="neo-glass border border-red-500/50 bg-red-500/10 p-4 rounded-2xl flex items-start gap-3 mt-2 max-w-lg">
+                        <i class="ph ph-warning-circle text-red-400 text-xl mt-0.5 shrink-0"></i>
+                        <div>
+                            <h4 class="text-red-400 font-semibold text-sm">Connection Error</h4>
+                            <p class="text-gray-300 text-xs mt-1 leading-relaxed">${escapeHTML(friendlyError)}</p>
+                        </div>
+                    </div>
+                `;
+                conversationHistory.pop(); 
+            }
+        }
+
+        // --- Slide-up Menus & Swipe-to-Close Setup ---
+        const historyModal = document.getElementById('historyModal');
+        const settingsModal = document.getElementById('settingsModal');
+
+        function setupSwipeToClose(modalEl, contentId, closeFunc) {
+            const content = document.getElementById(contentId);
+            const swipeArea = content.querySelector('.swipe-area');
+            let startY = 0, currentY = 0, isDragging = false;
+
+            swipeArea.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isDragging = true;
+                content.style.transition = 'none';
+            }, { passive: true });
+
+            swipeArea.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentY = e.touches[0].clientY;
+                const dy = currentY - startY;
+                if (dy > 0) content.style.transform = `translateY(${dy}px)`;
+            }, { passive: true });
+
+            swipeArea.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                content.style.transition = 'transform 0.3s ease-out';
+                const dy = currentY - startY;
+                if (dy > 100) {
+                    closeFunc();
+                    setTimeout(() => { content.style.transform = ''; }, 300);
+                } else {
+                    content.style.transform = 'translateY(0)';
+                }
+            });
+        }
+
+        setupSwipeToClose(historyModal, 'historyContent', closeHistory);
+        setupSwipeToClose(settingsModal, 'settingsContent', closeSettings);
+
+        function formatHistoryDate(timestamp) {
+            if(!timestamp) return "";
+            const d = new Date(timestamp);
+            const today = new Date();
+            const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+            if (isToday) return "Today";
+            
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const isYesterday = d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear();
+            if (isYesterday) return "Yesterday";
+
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
+        function openHistory() {
+            renderHistoryList();
+            historyModal.classList.remove('hidden');
+            historyModal.classList.add('flex');
+            setTimeout(() => {
+                historyModal.classList.remove('opacity-0');
+                document.getElementById('historyContent').classList.remove('translate-y-full');
+                document.getElementById('historyContent').classList.add('translate-y-0');
+            }, 10);
+        }
+
+        function closeHistory() {
+            historyModal.classList.add('opacity-0');
+            document.getElementById('historyContent').classList.remove('translate-y-0');
+            document.getElementById('historyContent').classList.add('translate-y-full');
+            setTimeout(() => {
+                historyModal.classList.add('hidden');
+                historyModal.classList.remove('flex');
+            }, 300);
+        }
+
+        function openSettings() {
+            const setModel = document.getElementById('set-model');
+            if (setModel) {
+                document.getElementById('set-username').value = APP_CONFIG.preferredName;
+                document.getElementById('set-aboutme').value = APP_CONFIG.aboutMe;
+                document.getElementById('set-emailhistory').value = APP_CONFIG.emailHistory;
+                document.getElementById('set-reminders').value = APP_CONFIG.reminders;
+
+                document.getElementById('set-key').value = APP_CONFIG.apiKey;
+                setModel.value = APP_CONFIG.model;
+                document.getElementById('set-tokens').value = APP_CONFIG.maxTokens;
+                document.getElementById('set-temp').value = APP_CONFIG.temperature;
+                
+                document.getElementById('set-email-service').value = APP_CONFIG.emailjsServiceId;
+                document.getElementById('set-email-template').value = APP_CONFIG.emailjsTemplateId;
+                document.getElementById('set-email-public').value = APP_CONFIG.emailjsPublicKey;
+                
+                const rMap = { "low": 0, "medium": 1, "high": 2 };
+                document.getElementById('set-reason').value = rMap[APP_CONFIG.reasoningEffort] !== undefined ? rMap[APP_CONFIG.reasoningEffort] : 1;
+                
+                document.getElementById('tokensDisplay').textContent = APP_CONFIG.maxTokens;
+                document.getElementById('tempDisplay').textContent = APP_CONFIG.temperature;
+                const rText = ['Low', 'Medium', 'High'];
+                document.getElementById('reasonDisplay').textContent = rText[document.getElementById('set-reason').value];
+            }
+
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+            setTimeout(() => {
+                settingsModal.classList.remove('opacity-0');
+                document.getElementById('settingsContent').classList.remove('translate-y-full');
+                document.getElementById('settingsContent').classList.add('translate-y-0');
+            }, 10);
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('opacity-0');
+            document.getElementById('settingsContent').classList.remove('translate-y-0');
+            document.getElementById('settingsContent').classList.add('translate-y-full');
+            setTimeout(() => {
+                settingsModal.classList.add('hidden');
+                settingsModal.classList.remove('flex');
+            }, 300);
+        }
+
+        function clearEmailHistory() {
+            if(confirm("Clear your email history record?")) {
+                APP_CONFIG.emailHistory = "";
+                localStorage.setItem('emailHistory', "");
+                document.getElementById('set-emailhistory').value = "";
+            }
+        }
+        
+        function clearReminders() {
+            if(confirm("Clear your current reminders and tasks?")) {
+                APP_CONFIG.reminders = "";
+                localStorage.setItem('aiReminders', "");
+                document.getElementById('set-reminders').value = "";
+            }
+        }
+
+        // --- History Logic Continued ---
+
+        function startNewChat() {
+            chatContainer.innerHTML = '';
+            conversationHistory = [{ role: "system", content: getSystemPrompt() }];
+            hasSentMessage = false;
+            currentSessionId = null;
+            isTemporaryChat = false;
+            pendingAttachments = [];
+            renderAttachments();
+            
+            changeGreeting();
+            document.getElementById('welcomeSubtitle').innerHTML = "";
+            wIdx = 0;
+            stopTypingAnimation = false;
+            if(appMode === 'text') setTimeout(typeWelcomeSubtitle, 100); 
+
+            // Restore normal model selector options
+            const modelSelect = document.getElementById('inlineModelSelect');
+            if (modelSelect) {
+                modelSelect.options[0].text = "⚡ Fast";
+                modelSelect.options[1].text = "🧠 Think";
+                modelSelect.options[2].text = "🔍 Deep";
+            }
+            updateSuggestionsForMode(false);
+            
+            // Turn off ghost button active style
+            const tempBtn = document.getElementById('tempChatBtn');
+            tempBtn.classList.remove('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/50');
+            tempBtn.classList.add('text-gray-400', 'glass-panel');
+
+            inputBorderWrap.classList.remove('border-static');
+            navMenuBtn.classList.remove('glass-gray-nav');
+            document.getElementById('chatTitleHeader').classList.add('opacity-0');
+            
+            modeSwitcher.classList.remove('opacity-0', 'pointer-events-none');
+            ghostIconContainer.classList.remove('opacity-0', 'pointer-events-none');
+
+            greetingArea.classList.remove('hidden', 'fade-out');
+            chatContainer.classList.add('hidden');
+            closeHistory();
+            messageInput.focus();
+        }
+
+        let openMenuId = null;
+
+        function renderHistoryList() {
+            historyList.innerHTML = '';
+            // Sort sessions by updated_at descending
+            sessions.sort((a,b) => (b.updated_at || 0) - (a.updated_at || 0));
+
+            sessions.forEach(session => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "group w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm text-gray-200 border border-white/5 relative";
+                
+                const dateStr = formatHistoryDate(session.updated_at);
+
+                itemDiv.innerHTML = `
+                    <div class="flex items-center truncate flex-1 cursor-pointer" onclick="loadSession('${session.id}')">
+                        <i class="ph ph-chat-circle mr-3 text-emerald-500/70 text-lg"></i>
+                        <span class="truncate pr-2">${escapeHTML(session.title)}</span>
+                    </div>
+                    <div class="flex items-center gap-3 relative">
+                        <span class="text-[10px] text-gray-500">${dateStr}</span>
+                        <button onclick="event.stopPropagation(); toggleSessionMenu('${session.id}', event);" class="p-1.5 text-gray-400 hover:text-white rounded-md hover:bg-white/10 transition-colors" title="Options">
+                            <i class="ph ph-dots-three-vertical text-lg"></i>
+                        </button>
+                        <div id="menu-${session.id}" class="hidden absolute right-0 bottom-full mb-1 w-32 bg-[#1a1a24] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+                            <button onclick="event.stopPropagation(); renameSession('${session.id}');" class="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors flex items-center gap-2 text-sm">
+                                <i class="ph ph-pencil text-gray-400"></i> Rename
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteSession('${session.id}');" class="w-full text-left px-4 py-2.5 hover:bg-red-500/10 text-red-400 transition-colors flex items-center gap-2 text-sm">
+                                <i class="ph ph-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                historyList.appendChild(itemDiv);
+            });
+        }
+
+        function toggleSessionMenu(id, e) {
+            e.stopPropagation();
+            if(openMenuId && openMenuId !== id) {
+                const oldMenu = document.getElementById(`menu-${openMenuId}`);
+                if(oldMenu) oldMenu.classList.add('hidden');
+            }
+            const menu = document.getElementById(`menu-${id}`);
+            if(menu) {
+                menu.classList.toggle('hidden');
+                openMenuId = menu.classList.contains('hidden') ? null : id;
+            }
+        }
+
+        function loadSession(id) {
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+            
+            setAppMode('text'); // Ensure standard UI applies
+            
+            currentSessionId = id;
+            conversationHistory = [...session.history];
+            hasSentMessage = true;
+            isTemporaryChat = false;
+            
+            stopTypingAnimation = true;
+            inputBorderWrap.classList.add('border-static');
+            navMenuBtn.classList.add('glass-gray-nav');
+            
+            modeSwitcher.classList.add('opacity-0', 'pointer-events-none');
+            ghostIconContainer.classList.add('opacity-0', 'pointer-events-none');
+
+            document.getElementById('chatTitleDisplay').textContent = session.title;
+            document.getElementById('chatTitleDisplay').classList.remove('text-red-400');
+            document.querySelector('#chatTitleHeader i').className = "ph ph-chat-circle text-emerald-400";
+            document.getElementById('chatTitleHeader').classList.remove('opacity-0');
+
+            greetingArea.classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+            chatContainer.innerHTML = '';
+            
+            conversationHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    let visibleText = msg.content.split('[Attached Document:')[0].trim();
+                    if(visibleText.startsWith('/sendemail') || visibleText.startsWith('/weather') || visibleText.startsWith('/ip') || visibleText.startsWith('/genjutsu') || visibleText.startsWith('/upload') || visibleText.startsWith('/itunes')) {
+                        renderUserMessage(visibleText);
+                    } else {
+                        renderUserMessage(visibleText || "(Attached Document)");
+                    }
+                } else if (msg.role === 'assistant') {
+                    const placeholderId = createAssistantMessagePlaceholder();
+                    document.getElementById(placeholderId).classList.remove('streaming');
+                    updateAssistantMessage(placeholderId, msg.content);
+                    document.getElementById(`actions-${placeholderId}`).classList.remove('opacity-0', 'pointer-events-none');
+                }
+            });
+            
+            closeHistory();
+            setTimeout(() => { chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'auto' }); }, 50);
+        }
+
+        function renameSession(id) {
+            document.getElementById(`menu-${id}`).classList.add('hidden');
+            openMenuId = null;
+            
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+            const newName = prompt("Enter new name for this chat:", session.title);
+            if (newName && newName.trim()) {
+                session.title = newName.trim();
+                session.updated_at = Date.now();
+                if (currentSessionId === id) {
+                    document.getElementById('chatTitleDisplay').textContent = session.title;
+                }
+                renderHistoryList();
+                saveSessionToCloud(id); 
+            }
+        }
+
+        function deleteSession(id) {
+            document.getElementById(`menu-${id}`).classList.add('hidden');
+            openMenuId = null;
+            
+            if(confirm("Are you sure you want to delete this chat?")) {
+                sessions = sessions.filter(s => s.id !== id);
+                renderHistoryList();
+                deleteSessionFromCloud(id); 
+                if (currentSessionId === id) startNewChat(); 
+            }
+        }
+
+        function copyMessage(id) {
+            const text = messageRawContent[id];
+            if (text) {
+                // Strip the formatting tags for clipboard copying
+                const cleanText = text
+                    .replace(/<ADD_REMINDER>([\s\S]*?)<\/ADD_REMINDER>/gi, '')
+                    .replace(/<REMOVE_REMINDER>([\s\S]*?)<\/REMOVE_REMINDER>/gi, '')
+                    .replace(/<VORTEX_FORM[\s\S]*?\/>/gi, '[Interactive Form Removed]')
+                    .replace(/\n\n\*✅ Added to reminders.*?\*\n\n/gi, '')
+                    .replace(/\n\n\*🗑️ Removed from reminders.*?\*\n\n/gi, '')
+                    .replace(/\n\n\*⏳ Adding reminder.*?\*\n\n/gi, '')
+                    .replace(/\n\n\*⏳ Removing reminder.*?\*\n\n/gi, '')
+                    .trim();
+
+                navigator.clipboard.writeText(cleanText);
+                const icon = document.getElementById(`copy-icon-${id}`);
+                icon.className = "ph ph-check text-green-400 text-sm";
+                setTimeout(() => icon.className = "ph ph-copy text-sm", 2000);
+            }
+        }
+
+        function resendMessage() {
+            const lastUserMsgIndex = conversationHistory.findLastIndex(m => m.role === 'user');
+            if (lastUserMsgIndex !== -1) {
+                const prompt = conversationHistory[lastUserMsgIndex].content;
+                conversationHistory.splice(lastUserMsgIndex);
+                messageInput.value = prompt.split('[Attached Document:')[0].trim();
+                chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        }
+
+        // Settings Logic Continued
+        function saveSettings() {
+            const setModel = document.getElementById('set-model');
+            if (!setModel) return;
+
+            const newName = document.getElementById('set-username').value.trim();
+            const newAbout = document.getElementById('set-aboutme').value.trim();
+            const newEmailHist = document.getElementById('set-emailhistory').value.trim();
+            const newReminders = document.getElementById('set-reminders').value.trim();
+
+            const newKey = document.getElementById('set-key').value.trim();
+            const newModel = setModel.value;
+            const newTokens = parseInt(document.getElementById('set-tokens').value);
+            const newTemp = parseFloat(document.getElementById('set-temp').value);
+            
+            const emailService = document.getElementById('set-email-service').value.trim();
+            const emailTemplate = document.getElementById('set-email-template').value.trim();
+            const emailPublic = document.getElementById('set-email-public').value.trim();
+            
+            const rVals = ['low', 'medium', 'high'];
+            const newReason = rVals[document.getElementById('set-reason').value];
+
+            APP_CONFIG.preferredName = newName; localStorage.setItem('prefName', newName);
+            APP_CONFIG.aboutMe = newAbout; localStorage.setItem('aboutMe', newAbout);
+            APP_CONFIG.emailHistory = newEmailHist; localStorage.setItem('emailHistory', newEmailHist);
+            APP_CONFIG.reminders = newReminders; localStorage.setItem('aiReminders', newReminders);
+
+            if (newKey) { APP_CONFIG.apiKey = newKey; localStorage.setItem('aiApiKey', newKey); }
+            if (newModel) { APP_CONFIG.model = newModel; localStorage.setItem('aiModel', newModel); }
+            if (newTokens) { APP_CONFIG.maxTokens = newTokens; localStorage.setItem('aiTokens', newTokens); }
+            
+            APP_CONFIG.temperature = newTemp; localStorage.setItem('aiTemp', newTemp);
+            APP_CONFIG.reasoningEffort = newReason; localStorage.setItem('aiReason', newReason);
+            
+            APP_CONFIG.emailjsServiceId = emailService; localStorage.setItem('emailjsServiceId', emailService);
+            APP_CONFIG.emailjsTemplateId = emailTemplate; localStorage.setItem('emailjsTemplateId', emailTemplate);
+            APP_CONFIG.emailjsPublicKey = emailPublic; localStorage.setItem('emailjsPublicKey', emailPublic);
+
+            if(APP_CONFIG.emailjsPublicKey) emailjs.init(APP_CONFIG.emailjsPublicKey);
+
+            // Update visible name if needed
+            if (!hasSentMessage) userNameDisplay.textContent = APP_CONFIG.preferredName || authUsername;
+
+            closeSettings();
+        }
+
+        // Placeholder Typing Animation
+        const examplePrompts = [
+            "Message Vortex...",
+            "Find a song: /itunes blinding lights",
+            "Upload a file to cloud: /upload",
+            "Search for anime: /genjutsu naruto",
+            "Check the weather: /weather London",
+            "Send an email: /sendemail",
+            "What are my current reminders?"
+        ];
+        let promptIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        
+        function typePlaceholder() {
+            if (stopTypingAnimation || isTemporaryChat || appMode === 'vision') {
+                if(appMode !== 'vision') messageInput.placeholder = "Message Vortex...";
+                return;
+            }
+
+            const currentPrompt = examplePrompts[promptIndex];
+            
+            if (isDeleting) {
+                messageInput.placeholder = currentPrompt.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                messageInput.placeholder = currentPrompt.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 30 : 80;
+
+            if (!isDeleting && charIndex === currentPrompt.length) {
+                typeSpeed = 2500;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                promptIndex = (promptIndex + 1) % examplePrompts.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(typePlaceholder, typeSpeed);
+        }
+
+        typePlaceholder();
+
+    </script>
+</body>
+</html>
